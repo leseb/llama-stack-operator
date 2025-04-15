@@ -1,6 +1,10 @@
 apiVersion: llama.x-k8s.io/v1alpha1
-kind: LlamaStackaDistribution
+kind: LlamaStackDistribution
 metadata:
   name: llamastackdistribution-sample
 spec:
-  # TODO(user): Add fields here
+  replicas: 1
+  server:
+    distribution:
+      name: "llama-3.1-8b-instruct"
+    containerSpec:
