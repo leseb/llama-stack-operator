@@ -1,0 +1,54 @@
+name: Integration Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  minikube-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+
+      - name: Install minikube
+        uses: medyagh/setup-minikube@latest
+
+      - name: Start minikube
+        run: |
+          minikube start
+          kubectl get pods -A
+
+      - name: Deploy CRD
+        run: |
+          make install
+          kubectl get crd
+
+      - name: Deploy operator
+        run: |
+          make deploy
+
+      - name: Deploy sample LlamaStackDistribution
+        run: |
+          kubectl apply -f config/samples/_v1alpha1_llamastackdistribution.yaml
+
+      - name: Check CRD status
+        run: |
+          kubectl get llamastackdistributions
+          kubectl describe llamastackdistributions llamastackdistribution-sample
+
+      - name: Check deployment status
+        run: |
+          kubectl get pods -w
+
+      - name: Setup tmate session
+        if: ${{ failure() }}
+        uses: mxschmitt/action-tmate@v3
